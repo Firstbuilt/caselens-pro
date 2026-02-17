@@ -1,25 +1,37 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { CaseAnalysis, SlideData, SlideStyle, Source, StyledPoint } from "../types";
+import { CaseAnalysis, SlideData, SlideStyle, Source, WordSection } from "../types";
 
-// Always use const ai = new GoogleGenAI({apiKey: process.env.API_KEY});
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-const SYSTEM_INSTRUCTION = `You are a world-class strategic presentation designer.
-Your goal: Synthesize multi-source case information into a highly polished, narrative-driven deck for stakeholders.
+const WORD_SYSTEM_INSTRUCTION = `You are a world-class European Privacy Compliance Expert and GDPR specialist. 
+Analyze legal cases/documents with extreme precision. Produce a comprehensive Word-ready analysis.
 
-STRICT CONTENT RULES:
-1. NO BLANK LINES: Do not include empty strings, whitespace-only points, or \n characters that create vertical gaps between bullets.
-2. SELECTIVE HIGHLIGHTING: Use 'bold' and 'color' (Hex) ONLY for critical keywords, dates, or figures.
-3. LINE SPACING: The design must accommodate 1.5 line spacing. Keep text extremely concise (max 40-50 words per slide) to prevent overflow.
-4. NARRATIVE: Focus on "What happened", "Why did it happen", and "Strategic Mitigation".
+STRICT CONTENT STRUCTURE:
+1. Summary (H1): Exactly 3 paragraphs. 
+   - Para 1: The Incident (Who, what, when, fine amount).
+   - Para 2: The Violations (Specific practices that breached regulations).
+   - Para 3: Mitigation (Strategic advice to avoid recurrence).
+2. Timeline (H1): Use bullets in format: [Date] - [Who] - [Action/What happened]. Be exhaustive with key dates (investigation, replies, preliminary findings, final decision).
+3. Process (H1): Dialogue format. Contrast "Company's Argument/Defense" vs "Regulator's Counter-argument/Finding". Show the legal struggle.
+4. Takeaway (H1): Strategic design constraints and advice specifically for Product Managers. Focus on Privacy by Design.
+5. For DPO (H1): Highly technical legal analysis. Use professional terminology (Art. 32, Art. 5, etc.). Focus on legal facts and defense strategies.
 
-SPECIFIC SLIDE SEQUENCE:
-1. Title Slide: [Company] vs [Authority]. Search for PNG/JPG logos.
-2. Table of Contents.
-3. Strategic Summary: Narrative questions + Authority Opinions panel.
-4. Analysis Slides: Synthesized facts with selective keyword highlighting.
-5. Technical compliance & PM takeaways.`;
+FORMATTING:
+- Language: English.
+- Tone: Professional, authoritative, and expert.
+- No length limit: Be as detailed as necessary to capture all critical legal nuances.`;
+
+const PPT_SYSTEM_INSTRUCTION = `You are a strategic presentation designer. 
+Convert the provided expert Word analysis into a polished, high-impact PPT outline.
+Focus on visual synthesis for executives. 
+The presentation should include:
+1. Title Slide (Impactful)
+2. Executive Summary (Strategic overview)
+3. The Legal Timeline (Key milestones)
+4. The Conflict: Company vs Regulator (Side-by-side comparison)
+5. Product Strategy (PM Takeaways)
+6. DPO Technical Deep Dive (Legal facts)`;
 
 const DEFAULT_STYLE: SlideStyle = {
   backgroundColor: '#FFFFFF',
@@ -37,31 +49,40 @@ const DEFAULT_STYLE: SlideStyle = {
   lineSpacing: 1.5
 };
 
-export async function generateOutline(sources: Source[]): Promise<string[]> {
+export async function generateWordAnalysis(sources: Source[]): Promise<WordSection[]> {
   const combinedContent = sources.map(s => `${s.type === 'url' ? 'URL' : 'Document'}: ${s.value}`).join('\n\n');
+  
   const response = await ai.models.generateContent({
     model: 'gemini-3-pro-preview',
-    contents: `Analyze these sources and create a comprehensive strategic outline.\n\n${combinedContent.substring(0, 30000)}`,
+    contents: `Analyze these sources and create the 5-part expert Word analysis. Do not miss important details.\n\n${combinedContent.substring(0, 40000)}`,
     config: {
-      systemInstruction: SYSTEM_INSTRUCTION,
+      systemInstruction: WORD_SYSTEM_INSTRUCTION,
       responseMimeType: "application/json",
-      responseSchema: { type: Type.ARRAY, items: { type: Type.STRING } }
+      responseSchema: {
+        type: Type.ARRAY,
+        items: {
+          type: Type.OBJECT,
+          properties: {
+            title: { type: Type.STRING },
+            content: { type: Type.STRING }
+          },
+          required: ["title", "content"]
+        }
+      }
     }
   });
+  
   return JSON.parse(response.text || '[]');
 }
 
-export async function generateSlideContent(outline: string[], sources: Source[]): Promise<CaseAnalysis> {
-  const combinedContent = sources.map(s => `${s.type === 'url' ? 'URL' : 'Document'}: ${s.value}`).join('\n\n');
+export async function generatePPTFromWord(wordContent: WordSection[]): Promise<CaseAnalysis> {
+  const textContext = wordContent.map(s => `${s.title}\n${s.content}`).join('\n\n');
+  
   const response = await ai.models.generateContent({
     model: 'gemini-3-pro-preview',
-    contents: `Fulfill content for these slides. 
-    IMPORTANT: No blank lines between bullets. 
-    Use 'bold' and 'color' sparingly to HIGHLIGHT only key info within points.
-    Outline: ${JSON.stringify(outline)}
-    Sources: ${combinedContent.substring(0, 30000)}`,
+    contents: `Transform this analysis into a strategic deck:\n\n${textContext}`,
     config: {
-      systemInstruction: SYSTEM_INSTRUCTION,
+      systemInstruction: PPT_SYSTEM_INSTRUCTION,
       tools: [{ googleSearch: {} }],
       responseMimeType: "application/json",
       responseSchema: {
@@ -82,8 +103,7 @@ export async function generateSlideContent(outline: string[], sources: Source[])
                     properties: {
                       text: { type: Type.STRING },
                       bold: { type: Type.BOOLEAN },
-                      color: { type: Type.STRING, description: "Hex code for highlighting" },
-                      fontSize: { type: Type.NUMBER },
+                      color: { type: Type.STRING },
                       isHeading: { type: Type.BOOLEAN }
                     },
                     required: ["text"]
@@ -104,6 +124,7 @@ export async function generateSlideContent(outline: string[], sources: Source[])
       }
     }
   });
+
   const data = JSON.parse(response.text || '{}');
   data.slides = data.slides.map((s: any, i: number) => ({
     ...s,
@@ -114,16 +135,12 @@ export async function generateSlideContent(outline: string[], sources: Source[])
 }
 
 export async function generateComplexScenarioVisual(slide: SlideData): Promise<string> {
-  const prompt = `A professional strategic diagram or technical flowchart for the topic: ${slide.title}. 
-  Content points context: ${slide.points.map(p => p.text).join('. ')}. 
-  Style: Minimalist high-end corporate vector illustration, professional palette, clear logic flow, NO TEXT.`;
-
+  const prompt = `A professional, corporate strategic visualization representing: ${slide.title}. High-end legal design, minimal, aesthetic, NO TEXT.`;
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash-image',
     contents: { parts: [{ text: prompt }] },
     config: { imageConfig: { aspectRatio: "16:9" } }
   });
-
   for (const part of response.candidates?.[0]?.content?.parts || []) {
     if (part.inlineData) return `data:image/png;base64,${part.inlineData.data}`;
   }

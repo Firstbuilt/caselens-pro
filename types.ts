@@ -13,13 +13,13 @@ export interface SlideStyle {
   accentColor: string;
   titleFontSize: number;
   bodyFontSize: number;
-  titleYPos: number; // 0-100 percentage
-  titleXPos: number; // 0-100 percentage
-  bodyYPos: number;  // 0-100 percentage
-  bodyXPos: number;  // 0-100 percentage
-  imageXPos: number; // 0-100 percentage
-  imageYPos: number; // 0-100 percentage
-  imageScale: number; // 0.1 - 2.0
+  titleYPos: number;
+  titleXPos: number;
+  bodyYPos: number;
+  bodyXPos: number;
+  imageXPos: number;
+  imageYPos: number;
+  imageScale: number;
   lineSpacing: number;
 }
 
@@ -46,9 +46,9 @@ export interface CaseAnalysis {
 
 export enum AnalysisStatus {
   IDLE = 'IDLE',
-  GENERATING_OUTLINE = 'GENERATING_OUTLINE',
-  OUTLINE_READY = 'OUTLINE_READY',
-  GENERATING_CONTENT = 'GENERATING_CONTENT',
+  ANALYZING_WORD = 'ANALYZING_WORD',
+  WORD_READY = 'WORD_READY',
+  GENERATING_PPT = 'GENERATING_PPT',
   READY = 'READY',
   ERROR = 'ERROR'
 }
@@ -58,4 +58,9 @@ export interface Source {
   type: 'url' | 'file';
   value: string;
   name: string;
+}
+
+export interface WordSection {
+  title: string;
+  content: string;
 }
