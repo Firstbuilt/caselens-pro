@@ -1,0 +1,5 @@
+{
+  "name": "CaseLens",
+  "description": "An advanced case analysis tool that transforms documents and URLs into professional PowerPoint summaries using Gemini AI.",
+  "requestFramePermissions": []
+}
