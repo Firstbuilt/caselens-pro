@@ -3,8 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { 
   Sparkles, AlertCircle, Download, Trash2, Image as ImageIcon, 
   Loader2, Plus, Info, X, Globe, FileCode, CheckCircle2, Gavel, 
-  ArrowRight, Layers, Zap, FileText, Presentation, RotateCcw,
-  ChevronLeft, ChevronRight
+  ArrowRight, Layers, Zap, FileText, Presentation, RotateCcw
 } from 'lucide-react';
 import { AnalysisStatus, CaseAnalysis, SlideData, SlideStyle, Source, WordSection } from './types';
 import { generateWordAnalysis, generatePPTFromWord, generateComplexScenarioVisual } from './services/geminiService';
@@ -29,8 +28,8 @@ const App: React.FC = () => {
     const handleResize = () => {
       if (previewRef.current && previewRef.current.parentElement) {
         const parent = previewRef.current.parentElement;
-        const scaleX = (parent.clientWidth - 40) / 1280;
-        const scaleY = (parent.clientHeight - 100) / 720;
+        const scaleX = (parent.clientWidth - 80) / 1280;
+        const scaleY = (parent.clientHeight - 120) / 720;
         setZoom(Math.min(scaleX, scaleY, 0.55));
       }
     };
@@ -38,10 +37,6 @@ const App: React.FC = () => {
     handleResize();
     return () => window.removeEventListener('resize', handleResize);
   }, [analysis, status]);
-
-  const addLog = (msg: string) => {
-    setStatusLog(prev => [...prev.map(l => ({...l, done: true})), { msg, done: false }]);
-  };
 
   const addUrlSource = () => {
     if (!urlInput.trim()) return;
@@ -99,13 +94,14 @@ const App: React.FC = () => {
     setWordContent([]);
     setSources([]);
     setStatusLog([]);
+    setActiveIndex(0);
   };
 
   const currentSlide = analysis?.slides[activeIndex];
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8FAFC] text-[#1E293B] overflow-hidden font-sans">
-      <nav className="h-16 glass sticky top-0 px-8 flex items-center justify-between z-[100] border-b border-slate-200">
+    <div className="h-screen w-screen flex flex-col bg-[#F8FAFC] text-[#1E293B] overflow-hidden font-sans selection:bg-indigo-100">
+      <nav className="h-16 glass shrink-0 px-8 flex items-center justify-between z-[100] border-b border-slate-200">
         <div className="flex items-center gap-3 cursor-pointer group" onClick={reset}>
           <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
             <Layers className="text-white" size={22} />
@@ -113,18 +109,18 @@ const App: React.FC = () => {
           <span className="font-extrabold text-xl tracking-tight text-slate-800">CaseLens <span className="text-indigo-600">Pro</span></span>
         </div>
         
-        {status === AnalysisStatus.READY && (
+        {(status === AnalysisStatus.READY || status === AnalysisStatus.WORD_READY) && (
           <div className="flex items-center gap-3">
-             <button onClick={reset} className="p-2 text-slate-400 hover:text-slate-600 transition-colors flex items-center gap-2 text-xs font-bold">
+             <button onClick={reset} className="p-2 text-slate-400 hover:text-indigo-600 transition-colors flex items-center gap-2 text-xs font-bold uppercase tracking-wider">
                <RotateCcw size={16}/> New Analysis
              </button>
           </div>
         )}
       </nav>
 
-      <main className="flex-1 flex overflow-hidden">
+      <main className="flex-1 overflow-hidden relative flex flex-col">
         {status === AnalysisStatus.IDLE && (
-          <div className="w-full flex flex-col items-center justify-center p-12 studio-grid overflow-y-auto">
+          <div className="absolute inset-0 flex flex-col items-center justify-center p-12 studio-grid overflow-y-auto custom-scrollbar">
             <div className="text-center space-y-6 max-w-3xl z-10 mb-16 animate-in fade-in duration-1000">
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-xs font-bold uppercase tracking-wider mb-4">
                 <Zap size={14} /> European Privacy Expert System
@@ -154,7 +150,7 @@ const App: React.FC = () => {
                     onChange={e => setUrlInput(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && addUrlSource()}
                   />
-                  <button onClick={addUrlSource} className="absolute right-2 top-2 bottom-2 px-6 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all">Add</button>
+                  <button onClick={addUrlSource} className="absolute right-2 top-2 bottom-2 px-6 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all shadow-md">Add</button>
                 </div>
                 <div className="flex flex-wrap gap-3 min-h-[40px]">
                   {sources.filter(s => s.type === 'url').map(s => (
@@ -200,7 +196,7 @@ const App: React.FC = () => {
         )}
 
         {(status === AnalysisStatus.ANALYZING_WORD || status === AnalysisStatus.GENERATING_PPT) && (
-          <div className="w-full flex flex-col items-center justify-center bg-white studio-grid relative overflow-hidden">
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-white studio-grid z-50">
              <div className="relative mb-12">
                <div className="w-32 h-32 border-8 border-slate-50 border-t-indigo-600 rounded-full animate-spin" />
                <div className="absolute inset-0 flex items-center justify-center">
@@ -224,10 +220,10 @@ const App: React.FC = () => {
         )}
 
         {(status === AnalysisStatus.WORD_READY || status === AnalysisStatus.READY) && (
-          <div className="w-full h-full flex overflow-hidden">
-            {/* Left Column: Word Analysis Editor */}
-            <div className={`flex flex-col border-r border-slate-200 transition-all duration-700 bg-white ${status === AnalysisStatus.READY ? 'w-[45%]' : 'w-full max-w-5xl mx-auto'}`}>
-              <div className="p-6 border-b border-slate-100 flex items-center justify-between sticky top-0 z-10 bg-white/80 backdrop-blur-md">
+          <div className="flex-1 flex overflow-hidden w-full h-full bg-white">
+            {/* Word Analysis Editor Pane */}
+            <div className={`flex flex-col border-r border-slate-200 transition-all duration-700 bg-white h-full overflow-hidden ${status === AnalysisStatus.READY ? 'w-[45%]' : 'w-full'}`}>
+              <div className="p-6 border-b border-slate-100 flex items-center justify-between sticky top-0 z-20 bg-white/95 backdrop-blur-md shrink-0">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-indigo-50 rounded-lg text-indigo-600">
                     <FileText size={20} />
@@ -238,31 +234,31 @@ const App: React.FC = () => {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => exportToWord(wordContent)} className="px-5 py-2.5 bg-slate-900 text-white rounded-xl text-xs font-black hover:bg-slate-800 transition-all shadow-lg shadow-slate-200">Export Word</button>
+                  <button onClick={() => exportToWord(wordContent)} className="px-5 py-2.5 bg-slate-900 text-white rounded-xl text-xs font-black hover:bg-slate-800 transition-all shadow-lg active:scale-95">Export Word</button>
                   {status === AnalysisStatus.WORD_READY && (
-                    <button onClick={generatePPTAction} className="px-6 py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-black shadow-lg shadow-indigo-200 flex items-center gap-2 hover:bg-indigo-700 transition-all">
+                    <button onClick={generatePPTAction} className="px-6 py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-black shadow-lg shadow-indigo-200 flex items-center gap-2 hover:bg-indigo-700 transition-all active:scale-95">
                        <Presentation size={16} /> Generate PPT
                     </button>
                   )}
                 </div>
               </div>
               
-              <div className="flex-1 overflow-y-auto p-12 space-y-12 selection:bg-indigo-100" style={{ fontFamily: 'Arial, sans-serif' }}>
+              {/* This is the ONLY area that should have a scrollbar */}
+              <div className="flex-1 overflow-y-auto p-12 space-y-12 selection:bg-indigo-100 custom-scrollbar scroll-smooth" style={{ fontFamily: 'Arial, sans-serif' }}>
                 {wordContent.map((section, idx) => (
                   <div key={idx} className="group space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ animationDelay: `${idx * 100}ms` }}>
                     <div className="flex items-center gap-4">
-                      <div className="h-6 w-1 bg-indigo-600 rounded-full" />
-                      <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{section.title}</h1>
+                      <div className="h-6 w-1.5 bg-indigo-600 rounded-full" />
+                      <h1 className="text-2xl font-bold text-slate-900 tracking-tight uppercase text-xs tracking-[0.2em] opacity-40 mb-2">{section.title}</h1>
                     </div>
                     <textarea 
-                      className="w-full text-base text-slate-700 bg-transparent border-0 focus:ring-0 resize-none p-0" 
-                      style={{ lineHeight: 1.5, minHeight: '100px' }}
+                      className="w-full text-[16px] text-slate-800 bg-transparent border-0 focus:ring-0 resize-none p-0 overflow-hidden" 
+                      style={{ lineHeight: 1.6 }}
                       value={section.content}
                       onChange={(e) => {
                         const next = [...wordContent];
                         next[idx].content = e.target.value;
                         setWordContent(next);
-                        // Auto resize textarea
                         e.target.style.height = 'auto';
                         e.target.style.height = e.target.scrollHeight + 'px';
                       }}
@@ -270,40 +266,48 @@ const App: React.FC = () => {
                         e.target.style.height = 'auto';
                         e.target.style.height = e.target.scrollHeight + 'px';
                       }}
+                      rows={1}
+                      ref={(el) => {
+                        if (el) {
+                          el.style.height = 'auto';
+                          el.style.height = el.scrollHeight + 'px';
+                        }
+                      }}
                     />
                   </div>
                 ))}
+                <div className="h-24 shrink-0" />
               </div>
             </div>
 
-            {/* Right Column: PPT Preview */}
+            {/* Strategic PPT Pane - NO SCROLLING ALLOWED HERE */}
             {status === AnalysisStatus.READY && analysis && (
-              <div className="flex-1 bg-[#0F172A] flex flex-col overflow-hidden animate-in slide-in-from-right-10 duration-700">
-                <div className="p-6 bg-slate-800/30 border-b border-white/5 flex items-center justify-between">
+              <div className="flex-1 bg-[#0F172A] flex flex-col overflow-hidden animate-in slide-in-from-right-10 duration-700 relative h-full">
+                <div className="p-6 bg-slate-800/30 border-b border-white/5 flex items-center justify-between z-20 shrink-0">
                    <div className="flex items-center gap-3 text-white">
                       <div className="p-2 bg-indigo-500/20 rounded-lg text-indigo-400">
                         <Presentation size={20} />
                       </div>
                       <div>
                         <span className="font-bold text-sm block">Strategic Presentation</span>
-                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Visual Synthesis Active</span>
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Visual Synthesis Engine</span>
                       </div>
                    </div>
                    <button 
                      onClick={() => { setIsDownloading(true); generatePPT(analysis).finally(() => setIsDownloading(false)); }}
                      disabled={isDownloading}
-                     className="px-6 py-2.5 bg-white text-slate-900 rounded-xl text-xs font-black hover:bg-slate-100 flex items-center gap-2 shadow-xl disabled:opacity-50"
+                     className="px-6 py-2.5 bg-white text-slate-900 rounded-xl text-xs font-black hover:bg-indigo-50 flex items-center gap-2 shadow-2xl disabled:opacity-50 transition-all active:scale-95"
                    >
-                     {isDownloading ? <Loader2 className="animate-spin" size={16}/> : <Download size={16}/>} Export PPT
+                     {isDownloading ? <Loader2 className="animate-spin" size={16}/> : <Download size={16}/>} Export PPTX
                    </button>
                 </div>
 
-                <div className="flex-1 overflow-hidden flex flex-col items-center justify-center studio-grid relative p-12 bg-slate-900/50">
-                   {/* PPT Slide Stage */}
-                   <div className="relative group/stage">
+                {/* Main Stage: Strictly overflow-hidden to prevent vertical scrolling on the right side */}
+                <div className="flex-1 overflow-hidden flex flex-col items-center justify-center relative p-12 bg-slate-900/50 studio-grid">
+                   <div className="relative shrink-0">
                       <div 
                         ref={previewRef}
-                        className="bg-white shadow-[0_50px_100px_-20px_rgba(0,0,0,0.6)] overflow-hidden shrink-0 border border-white/10" 
+                        className="bg-white shadow-[0_60px_120px_-30px_rgba(0,0,0,0.8)] overflow-hidden shrink-0 border border-white/10 rounded-sm" 
                         style={{ 
                           width: '1280px', height: '720px', 
                           transform: `scale(${zoom})`,
@@ -314,31 +318,32 @@ const App: React.FC = () => {
                            <div className="p-20 h-full w-full relative">
                               {currentSlide.type === 'title' ? (
                                 <div className="h-full flex flex-col justify-center">
-                                   <div className="w-20 h-2 bg-indigo-600 mb-12 rounded-full" />
-                                   <h1 className="text-8xl font-black text-slate-900 leading-[0.9] tracking-tighter mb-8">{currentSlide.companyName || "Case Analysis"}</h1>
-                                   <p className="text-4xl font-bold text-indigo-600/60 tracking-tight">{analysis.subtitle}</p>
+                                   <div className="w-24 h-2.5 bg-indigo-600 mb-12 rounded-full" />
+                                   <h1 className="text-8xl font-black text-slate-900 leading-[0.85] tracking-tighter mb-8">{currentSlide.companyName || "Legal Case Analysis"}</h1>
+                                   <p className="text-4xl font-bold text-indigo-600/60 tracking-tight leading-snug">{analysis.subtitle}</p>
                                    <div className="mt-20 flex items-center gap-4">
-                                      <div className="text-xs font-black text-slate-400 uppercase tracking-[0.3em]">Confidential | Strategic Report</div>
+                                      <div className="h-px w-20 bg-slate-200" />
+                                      <div className="text-xs font-black text-slate-400 uppercase tracking-[0.4em]">Confidential Executive Dossier</div>
                                    </div>
                                 </div>
                               ) : (
                                 <div className="flex flex-col h-full">
                                    <div className="flex items-center justify-between mb-16">
-                                      <h2 className="text-5xl font-black text-slate-900 uppercase tracking-tighter border-l-[12px] border-indigo-600 pl-10 leading-none">{currentSlide.title}</h2>
-                                      <div className="text-xs font-black text-slate-300 tracking-[0.4em] uppercase">PG {(activeIndex + 1).toString().padStart(2, '0')}</div>
+                                      <h2 className="text-5xl font-black text-slate-900 uppercase tracking-tighter border-l-[14px] border-indigo-600 pl-10 leading-none">{currentSlide.title}</h2>
+                                      <div className="text-xs font-black text-slate-300 tracking-[0.5em] uppercase">PG {(activeIndex + 1).toString().padStart(2, '0')}</div>
                                    </div>
                                    <div className="flex-1 flex gap-20">
-                                      <div className="flex-1 space-y-8">
+                                      <div className="flex-1 space-y-10">
                                          {currentSlide.points.map((p, i) => (
-                                           <div key={i} className="flex gap-6 animate-in slide-in-from-left-4 fade-in" style={{ animationDelay: `${i * 100}ms` }}>
-                                              <div className="w-12 h-1 bg-indigo-200 mt-5 flex-shrink-0 rounded-full" />
-                                              <p className="text-3xl font-semibold leading-snug tracking-tight text-slate-800" style={{ color: p.color || 'inherit', fontWeight: p.bold ? 900 : 500 }}>{p.text}</p>
+                                           <div key={i} className="flex gap-8 animate-in slide-in-from-left-4 fade-in" style={{ animationDelay: `${i * 100}ms` }}>
+                                              <div className="w-14 h-1 bg-indigo-200 mt-6 flex-shrink-0 rounded-full" />
+                                              <p className="text-3xl font-semibold leading-[1.3] tracking-tight text-slate-800" style={{ color: p.color || 'inherit', fontWeight: p.bold ? 900 : 500 }}>{p.text}</p>
                                            </div>
                                          ))}
                                       </div>
                                       {currentSlide.imageUrl && (
-                                        <div className="w-[450px] h-[500px] shrink-0 bg-slate-50 rounded-[3rem] overflow-hidden shadow-2xl border-8 border-white group/img">
-                                          <img src={currentSlide.imageUrl} className="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-700" />
+                                        <div className="w-[500px] h-[520px] shrink-0 bg-slate-50 rounded-[3.5rem] overflow-hidden shadow-2xl border-[10px] border-white group/img">
+                                          <img src={currentSlide.imageUrl} className="w-full h-full object-cover group-hover/img:scale-110 transition-transform duration-1000 ease-out" />
                                         </div>
                                       )}
                                    </div>
@@ -347,30 +352,16 @@ const App: React.FC = () => {
                            </div>
                          )}
                       </div>
-                      
-                      {/* Nav Overlay */}
-                      <button 
-                        onClick={() => setActiveIndex(prev => Math.max(0, prev - 1))}
-                        className="absolute left-[-80px] top-1/2 -translate-y-1/2 p-4 text-white/20 hover:text-white transition-all bg-white/5 rounded-full backdrop-blur-md opacity-0 group-hover/stage:opacity-100"
-                      >
-                        <ChevronLeft size={48} />
-                      </button>
-                      <button 
-                        onClick={() => setActiveIndex(prev => Math.min(analysis.slides.length - 1, prev + 1))}
-                        className="absolute right-[-80px] top-1/2 -translate-y-1/2 p-4 text-white/20 hover:text-white transition-all bg-white/5 rounded-full backdrop-blur-md opacity-0 group-hover/stage:opacity-100"
-                      >
-                        <ChevronRight size={48} />
-                      </button>
                    </div>
 
-                   {/* Slide Pager */}
-                   <div className="absolute bottom-10 flex gap-3 bg-white/5 p-4 rounded-[2rem] backdrop-blur-2xl border border-white/10 shadow-2xl">
+                   {/* Slide Pager - Clean navigation dots at the bottom */}
+                   <div className="absolute bottom-10 flex gap-4 bg-white/5 p-5 rounded-[2.5rem] backdrop-blur-3xl border border-white/10 shadow-3xl z-30">
                       {analysis.slides.map((_, i) => (
                         <button 
                           key={i} 
                           onClick={() => setActiveIndex(i)} 
-                          className={`h-2 transition-all rounded-full ${activeIndex === i ? 'bg-indigo-500 w-12' : 'bg-white/20 hover:bg-white/40 w-2'}`} 
-                          title={`Slide ${i+1}`}
+                          className={`h-2.5 transition-all rounded-full ${activeIndex === i ? 'bg-indigo-500 w-16' : 'bg-white/10 hover:bg-white/30 w-2.5'}`} 
+                          title={`Go to slide ${i+1}`}
                         />
                       ))}
                    </div>
@@ -381,12 +372,12 @@ const App: React.FC = () => {
         )}
 
         {status === AnalysisStatus.ERROR && (
-          <div className="w-full flex flex-col items-center justify-center p-12 text-center animate-in zoom-in-95">
+          <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center z-50 bg-white/90 backdrop-blur-sm">
             <div className="w-24 h-24 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-8 shadow-2xl shadow-red-100">
                <AlertCircle size={48} />
             </div>
             <h2 className="text-4xl font-black text-slate-900 mb-4 tracking-tighter">Analysis Interrupted</h2>
-            <p className="text-slate-500 max-w-md mb-10 font-medium">{error || "An unexpected neural disruption occurred during processing."}</p>
+            <p className="text-slate-500 max-w-md mb-10 font-medium">{error || "An unexpected error occurred. This might be due to a complex legal structure that needs manual review."}</p>
             <button onClick={reset} className="px-12 py-5 bg-slate-900 text-white rounded-[2rem] font-black text-xl hover:scale-105 active:scale-95 transition-all shadow-2xl">Try Again</button>
           </div>
         )}
