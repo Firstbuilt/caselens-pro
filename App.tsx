@@ -6,7 +6,7 @@ import {
   ArrowRight, Layers, Zap, FileText, Presentation, RotateCcw
 } from 'lucide-react';
 import { AnalysisStatus, CaseAnalysis, SlideData, SlideStyle, Source, WordSection } from './types';
-import { generateWordAnalysis, generatePPTFromWord, generateComplexScenarioVisual } from './services/geminiService';
+import { generateWordAnalysis, generatePPTFromWord, generateComplexScenarioVisual, validateSources } from './services/geminiService';
 import { generatePPT } from './services/pptService';
 import { exportToWord } from './services/wordService';
 
@@ -65,7 +65,15 @@ const App: React.FC = () => {
     if (sources.length === 0) return;
     try {
       setStatus(AnalysisStatus.ANALYZING_WORD);
-      setStatusLog([{ msg: "Privacy Expert reviewing the files...", done: false }]);
+      setStatusLog([{ msg: "Authenticating input validity...", done: false }]);
+      
+      const isValid = await validateSources(sources);
+      if (!isValid) {
+        setStatus(AnalysisStatus.VALIDATION_FAILED);
+        return;
+      }
+
+      setStatusLog(prev => [...prev.map(l => ({...l, done: true})), { msg: "Privacy Expert reviewing the files...", done: false }]);
       const res = await generateWordAnalysis(sources);
       setWordContent(res);
       setStatus(AnalysisStatus.WORD_READY);
@@ -195,6 +203,35 @@ const App: React.FC = () => {
           </div>
         )}
 
+        {status === AnalysisStatus.VALIDATION_FAILED && (
+          <div className="absolute inset-0 z-[200] flex flex-col items-center justify-center bg-[#0a0a0a] overflow-hidden mesh-gradient p-12">
+            <div className="flex flex-col items-center text-center animate-in zoom-in-95 duration-500 max-w-5xl">
+              {/* Ghostly Speechless Emoji Above Text */}
+              <div className="opacity-10 select-none pointer-events-none mb-4 transform hover:scale-105 transition-transform duration-1000">
+                <span className="text-[18rem] md:text-[28rem] leading-none">😑</span>
+              </div>
+              
+              {/* Sassy Error Message */}
+              <div className="space-y-8">
+                <h2 className="text-5xl md:text-7xl font-black text-white leading-[1.1] tracking-tighter drop-shadow-2xl">
+                  Come on! <br/>
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-violet-400">Are you sure</span> what you input is related to case decision?
+                </h2>
+                
+                <p className="text-slate-400 font-bold text-lg uppercase tracking-widest opacity-60">Legal Protocol Violation Detected</p>
+              </div>
+
+              {/* Retry Button */}
+              <button 
+                onClick={reset}
+                className="mt-16 px-16 py-6 bg-white text-black rounded-full font-black text-2xl hover:scale-110 active:scale-95 transition-all shadow-[0_0_80px_rgba(255,255,255,0.2)] hover:bg-indigo-50 border-4 border-white"
+              >
+                My fault, retry!
+              </button>
+            </div>
+          </div>
+        )}
+
         {(status === AnalysisStatus.ANALYZING_WORD || status === AnalysisStatus.GENERATING_PPT) && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-white studio-grid z-50">
              <div className="relative mb-12">
@@ -243,7 +280,6 @@ const App: React.FC = () => {
                 </div>
               </div>
               
-              {/* This is the ONLY area that should have a scrollbar */}
               <div className="flex-1 overflow-y-auto p-12 space-y-12 selection:bg-indigo-100 custom-scrollbar scroll-smooth" style={{ fontFamily: 'Arial, sans-serif' }}>
                 {wordContent.map((section, idx) => (
                   <div key={idx} className="group space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ animationDelay: `${idx * 100}ms` }}>
@@ -280,7 +316,7 @@ const App: React.FC = () => {
               </div>
             </div>
 
-            {/* Strategic PPT Pane - NO SCROLLING ALLOWED HERE */}
+            {/* Strategic PPT Pane */}
             {status === AnalysisStatus.READY && analysis && (
               <div className="flex-1 bg-[#0F172A] flex flex-col overflow-hidden animate-in slide-in-from-right-10 duration-700 relative h-full">
                 <div className="p-6 bg-slate-800/30 border-b border-white/5 flex items-center justify-between z-20 shrink-0">
@@ -302,7 +338,6 @@ const App: React.FC = () => {
                    </button>
                 </div>
 
-                {/* Main Stage: Strictly overflow-hidden to prevent vertical scrolling on the right side */}
                 <div className="flex-1 overflow-hidden flex flex-col items-center justify-center relative p-12 bg-slate-900/50 studio-grid">
                    <div className="relative shrink-0">
                       <div 
@@ -354,7 +389,6 @@ const App: React.FC = () => {
                       </div>
                    </div>
 
-                   {/* Slide Pager - Clean navigation dots at the bottom */}
                    <div className="absolute bottom-10 flex gap-4 bg-white/5 p-5 rounded-[2.5rem] backdrop-blur-3xl border border-white/10 shadow-3xl z-30">
                       {analysis.slides.map((_, i) => (
                         <button 

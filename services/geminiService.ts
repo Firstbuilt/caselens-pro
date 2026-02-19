@@ -49,6 +49,22 @@ const DEFAULT_STYLE: SlideStyle = {
   lineSpacing: 1.5
 };
 
+export async function validateSources(sources: Source[]): Promise<boolean> {
+  const combinedContext = sources.map(s => `Type: ${s.type}, Content/Name: ${s.name}`).join('\n');
+  
+  const response = await ai.models.generateContent({
+    model: 'gemini-3-flash-preview',
+    contents: `Examine the following input sources and determine if they are related to a legal case decision, regulatory finding, or official fine (e.g., GDPR fines, court judgments). 
+    Respond ONLY with "true" if it is a case decision, and "false" if it is just random news, generic text, or unrelated content.\n\n${combinedContext}`,
+    config: {
+      temperature: 0.1,
+    }
+  });
+
+  const result = response.text.toLowerCase().trim();
+  return result.includes('true');
+}
+
 export async function generateWordAnalysis(sources: Source[]): Promise<WordSection[]> {
   const combinedContent = sources.map(s => `${s.type === 'url' ? 'URL' : 'Document'}: ${s.value}`).join('\n\n');
   
