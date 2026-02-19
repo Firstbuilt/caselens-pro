@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { 
   Sparkles, AlertCircle, Download, Trash2, Image as ImageIcon, 
   Loader2, Plus, Info, X, Globe, FileCode, CheckCircle2, Gavel, 
-  ArrowRight, Layers, Zap, FileText, Presentation, RotateCcw
+  ArrowRight, Layers, Zap, FileText, Presentation, RotateCcw, Copy
 } from 'lucide-react';
 import { AnalysisStatus, CaseAnalysis, SlideData, SlideStyle, Source, WordSection } from './types';
 import { generateWordAnalysis, generatePPTFromWord, generateComplexScenarioVisual, validateSources } from './services/geminiService';
@@ -42,6 +42,11 @@ const App: React.FC = () => {
     if (!urlInput.trim()) return;
     setSources([...sources, { id: Date.now().toString(), type: 'url', value: urlInput, name: urlInput }]);
     setUrlInput('');
+  };
+
+  const useExample = () => {
+    const example = "https://www.dataprotection.ie/sites/default/files/uploads/2023-01/Final%20Decision%20VIEC%20IN-21-2-5%20121222_Redacted.pdf";
+    setUrlInput(example);
   };
 
   const addFileSource = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -143,22 +148,35 @@ const App: React.FC = () => {
             </div>
 
             <div className="w-full max-w-5xl grid md:grid-cols-2 gap-8 z-10">
-              <div className="bg-white p-10 rounded-[2.5rem] shadow-2xl space-y-8 border border-slate-100 group hover:border-indigo-200 transition-all">
+              <div className="bg-white p-10 rounded-[2.5rem] shadow-2xl space-y-6 border border-slate-100 group hover:border-indigo-200 transition-all">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shadow-inner">
                     <Globe size={24} />
                   </div>
                   <h3 className="text-2xl font-extrabold text-slate-800 tracking-tight">Crawl URL</h3>
                 </div>
-                <div className="relative">
-                  <input 
-                    className="w-full p-5 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all pr-24" 
-                    placeholder="Case URL, news, or findings..." 
-                    value={urlInput} 
-                    onChange={e => setUrlInput(e.target.value)}
-                    onKeyDown={e => e.key === 'Enter' && addUrlSource()}
-                  />
-                  <button onClick={addUrlSource} className="absolute right-2 top-2 bottom-2 px-6 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all shadow-md">Add</button>
+                <div className="space-y-4">
+                  <div className="relative">
+                    <input 
+                      className="w-full p-5 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all pr-24" 
+                      placeholder="Case URL, news, or findings..." 
+                      value={urlInput} 
+                      onChange={e => setUrlInput(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && addUrlSource()}
+                    />
+                    <button onClick={addUrlSource} className="absolute right-2 top-2 bottom-2 px-6 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all shadow-md">Add</button>
+                  </div>
+                  <div className="px-1 space-y-2">
+                    <p className="text-[11px] text-slate-400 font-bold uppercase tracking-widest flex items-center gap-2">
+                      <Info size={12} /> Example URL (Click to fill):
+                    </p>
+                    <div 
+                      onClick={useExample}
+                      className="text-[10px] text-slate-400 font-mono bg-slate-50 p-3 rounded-xl border border-slate-100 cursor-pointer hover:border-indigo-200 hover:text-indigo-600 transition-all break-all leading-normal select-all"
+                    >
+                      https://www.dataprotection.ie/sites/default/files/uploads/2023-01/Final%20Decision%20VIEC%20IN-21-2-5%20121222_Redacted.pdf
+                    </div>
+                  </div>
                 </div>
                 <div className="flex flex-wrap gap-3 min-h-[40px]">
                   {sources.filter(s => s.type === 'url').map(s => (
@@ -206,12 +224,10 @@ const App: React.FC = () => {
         {status === AnalysisStatus.VALIDATION_FAILED && (
           <div className="absolute inset-0 z-[200] flex flex-col items-center justify-center bg-[#0a0a0a] overflow-hidden mesh-gradient p-12">
             <div className="flex flex-col items-center text-center animate-in zoom-in-95 duration-500 max-w-5xl">
-              {/* Ghostly Speechless Emoji Above Text */}
               <div className="opacity-10 select-none pointer-events-none mb-4 transform hover:scale-105 transition-transform duration-1000">
                 <span className="text-[18rem] md:text-[28rem] leading-none">😑</span>
               </div>
               
-              {/* Sassy Error Message */}
               <div className="space-y-8">
                 <h2 className="text-5xl md:text-7xl font-black text-white leading-[1.1] tracking-tighter drop-shadow-2xl">
                   Come on! <br/>
@@ -221,7 +237,6 @@ const App: React.FC = () => {
                 <p className="text-slate-400 font-bold text-lg uppercase tracking-widest opacity-60">Legal Protocol Violation Detected</p>
               </div>
 
-              {/* Retry Button */}
               <button 
                 onClick={reset}
                 className="mt-16 px-16 py-6 bg-white text-black rounded-full font-black text-2xl hover:scale-110 active:scale-95 transition-all shadow-[0_0_80px_rgba(255,255,255,0.2)] hover:bg-indigo-50 border-4 border-white"
@@ -258,7 +273,6 @@ const App: React.FC = () => {
 
         {(status === AnalysisStatus.WORD_READY || status === AnalysisStatus.READY) && (
           <div className="flex-1 flex overflow-hidden w-full h-full bg-white">
-            {/* Word Analysis Editor Pane */}
             <div className={`flex flex-col border-r border-slate-200 transition-all duration-700 bg-white h-full overflow-hidden ${status === AnalysisStatus.READY ? 'w-[45%]' : 'w-full'}`}>
               <div className="p-6 border-b border-slate-100 flex items-center justify-between sticky top-0 z-20 bg-white/95 backdrop-blur-md shrink-0">
                 <div className="flex items-center gap-3">
@@ -316,7 +330,6 @@ const App: React.FC = () => {
               </div>
             </div>
 
-            {/* Strategic PPT Pane */}
             {status === AnalysisStatus.READY && analysis && (
               <div className="flex-1 bg-[#0F172A] flex flex-col overflow-hidden animate-in slide-in-from-right-10 duration-700 relative h-full">
                 <div className="p-6 bg-slate-800/30 border-b border-white/5 flex items-center justify-between z-20 shrink-0">
