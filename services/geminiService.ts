@@ -5,33 +5,45 @@ import { CaseAnalysis, SlideData, SlideStyle, Source, WordSection } from "../typ
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 const WORD_SYSTEM_INSTRUCTION = `You are a world-class European Privacy Compliance Expert and GDPR specialist. 
-Analyze legal cases/documents with extreme precision. Produce a comprehensive Word-ready analysis.
+Analyze legal cases/documents with extreme precision. Produce a comprehensive Word-ready analysis in RICH MARKDOWN FORMAT.
 
-STRICT CONTENT STRUCTURE:
-1. Summary (H1): Exactly 3 paragraphs. 
+STRICT CONTENT STRUCTURE (Use Markdown headers # and ##):
+1. Summary (H1): Exactly 3 paragraphs using bold text for impact.
    - Para 1: The Incident (Who, what, when, fine amount).
    - Para 2: The Violations (Specific practices that breached regulations).
    - Para 3: Mitigation (Strategic advice to avoid recurrence).
-2. Timeline (H1): Use bullets in format: [Date] - [Who] - [Action/What happened]. Be exhaustive with key dates (investigation, replies, preliminary findings, final decision).
-3. Process (H1): Dialogue format. Contrast "Company's Argument/Defense" vs "Regulator's Counter-argument/Finding". Show the legal struggle.
-4. Takeaway (H1): Strategic design constraints and advice specifically for Product Managers. Focus on Privacy by Design.
+2. Timeline (H1): Use a Markdown TABLE with columns: [Date], [Stakeholder], [Action]. Be exhaustive.
+3. Process (H1): Dialogue format using bold titles. Contrast "Company's Argument/Defense" vs "Regulator's Counter-argument/Finding".
+4. Takeaway (H1): Strategic design constraints and advice specifically for Product Managers. Use Markdown lists and Blockquotes.
 5. For DPO (H1): Highly technical legal analysis. Use professional terminology (Art. 32, Art. 5, etc.). Focus on legal facts and defense strategies.
 
 FORMATTING:
 - Language: English.
-- Tone: Professional, authoritative, and expert.
+- Formatting: Use # for section titles, ## for subheaders, **bold** for key terms, and > for expert notes.
 - No length limit: Be as detailed as necessary to capture all critical legal nuances.`;
 
-const PPT_SYSTEM_INSTRUCTION = `You are a strategic presentation designer. 
+const PPT_SYSTEM_INSTRUCTION = `You are a strategic presentation designer for C-suite executives. 
 Convert the provided expert Word analysis into a polished, high-impact PPT outline.
-Focus on visual synthesis for executives. 
+You MUST generate between 8 to 12 slides to ensure full coverage of the legal complexity.
+
+CRITICAL INSTRUCTION FOR CONTENT DEPTH:
+- DO NOT use short bullet points, fragments, or single keywords (e.g., NEVER use just "Fine: €405m").
+- EVERY bullet point MUST be a FULL DESCRIPTIVE EXPLANATION (at least 2-3 sentences).
+- Each point should clearly describe the "Context" (What happened), the "Rationale" (Why it is legally or strategically significant), and the "Impact" (How this affects future operations).
+- Users need to understand the "Why" and "How" of each finding without needing to refer back to the full report.
+
 The presentation should include:
-1. Title Slide (Impactful)
-2. Executive Summary (Strategic overview)
-3. The Legal Timeline (Key milestones)
-4. The Conflict: Company vs Regulator (Side-by-side comparison)
-5. Product Strategy (PM Takeaways)
-6. DPO Technical Deep Dive (Legal facts)`;
+1. Title Slide (Impactful executive title)
+2. Strategic Executive Summary (Deep overview of the crisis and organizational impact)
+3. Technical Analysis of Violations (Detailed breakdown of the specific regulatory breaches)
+4. Legal Milestone Narrative (A comprehensive timeline explaining the procedural history)
+5. Defense vs Ruling Analysis (A side-by-side comparison of the company's legal logic versus the regulator's final findings)
+6. Fine Calculation Rationale (In-depth analysis of why the penalty was scaled based on global turnover and severity)
+7. DPO Technical Deep Dive (Advanced review of Article 5, 25, 32, etc.)
+8. Product Strategy & Design Hardening (Specific roadmap changes and UX constraints for PM teams)
+9. Remediation & Future-Proofing (Detailed strategic next steps for the organization)
+
+Each slide must have at least 3-4 highly detailed, explanatory points. Use "isHeading: true" for major sub-topics within slides.`;
 
 const DEFAULT_STYLE: SlideStyle = {
   backgroundColor: '#FFFFFF',
@@ -70,7 +82,7 @@ export async function generateWordAnalysis(sources: Source[]): Promise<WordSecti
   
   const response = await ai.models.generateContent({
     model: 'gemini-3-pro-preview',
-    contents: `Analyze these sources and create the 5-part expert Word analysis. Do not miss important details.\n\n${combinedContent.substring(0, 40000)}`,
+    contents: `Analyze these sources and create the 5-part expert Word analysis in Markdown.\n\n${combinedContent.substring(0, 40000)}`,
     config: {
       systemInstruction: WORD_SYSTEM_INSTRUCTION,
       responseMimeType: "application/json",
@@ -96,7 +108,7 @@ export async function generatePPTFromWord(wordContent: WordSection[]): Promise<C
   
   const response = await ai.models.generateContent({
     model: 'gemini-3-pro-preview',
-    contents: `Transform this analysis into a strategic deck:\n\n${textContext}`,
+    contents: `Transform this analysis into a comprehensive strategic deck (at least 8 slides with ELABORATE, DESCRIPTIVE, MULTI-SENTENCE bullets for every point):\n\n${textContext}`,
     config: {
       systemInstruction: PPT_SYSTEM_INSTRUCTION,
       tools: [{ googleSearch: {} }],

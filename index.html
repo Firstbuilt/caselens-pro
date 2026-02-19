@@ -8,6 +8,18 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'sans-serif'],
+          },
+        },
+      },
+    }
+  </script>
   <style>
     :root {
       --brand-indigo: #4F46E5;
@@ -25,27 +37,27 @@
       -webkit-backdrop-filter: blur(12px);
       border: 1px solid rgba(255, 255, 255, 0.3);
     }
-    .dark-glass {
-      background: rgba(15, 23, 42, 0.8);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-    }
     
     /* Custom Scrollbar specifically for the Word Pane */
     .custom-scrollbar::-webkit-scrollbar {
       width: 8px;
     }
     .custom-scrollbar::-webkit-scrollbar-track {
-      background: #F1F5F9;
+      background: transparent;
     }
     .custom-scrollbar::-webkit-scrollbar-thumb {
       background: #CBD5E1;
       border-radius: 4px;
-      border: 2px solid #F1F5F9;
+      border: 2px solid transparent;
+    }
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #334155;
     }
     .custom-scrollbar::-webkit-scrollbar-thumb:hover {
       background: #94A3B8;
+    }
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #475569;
     }
 
     .mesh-gradient {
@@ -58,6 +70,9 @@
     .studio-grid {
       background-size: 40px 40px;
       background-image: radial-gradient(circle, rgba(226, 232, 240, 0.2) 1px, transparent 1px);
+    }
+    .dark .studio-grid {
+      background-image: radial-gradient(circle, rgba(51, 65, 85, 0.4) 1px, transparent 1px);
     }
   </style>
 <script type="importmap">
@@ -74,7 +89,7 @@
 }
 </script>
 </head>
-<body class="bg-[#F8FAFC] text-slate-900">
+<body class="bg-[#F8FAFC] dark:bg-[#0F172A] text-slate-900 transition-colors duration-500">
   <div id="root"></div>
   <script type="module" src="/index.tsx"></script>
 </body>
