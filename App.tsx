@@ -4,7 +4,7 @@ import {
   Sparkles, AlertCircle, Download, Trash2, Image as ImageIcon, 
   Loader2, Plus, Info, X, Globe, FileCode, CheckCircle2, Gavel, 
   ArrowRight, Layers, Zap, FileText, Presentation, RotateCcw, Copy,
-  Sun, Moon
+  Sun, Moon, ChevronLeft, ChevronRight, PlayCircle
 } from 'lucide-react';
 import { AnalysisStatus, CaseAnalysis, SlideData, SlideStyle, Source, WordSection } from './types';
 import { generateWordAnalysis, generatePPTFromWord, generateComplexScenarioVisual, validateSources, extractTextFromSources } from './services/geminiService';
@@ -27,6 +27,21 @@ const App: React.FC = () => {
     const saved = localStorage.getItem('theme');
     return saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches);
   });
+
+  // Demo State
+  const [isDemoOpen, setIsDemoOpen] = useState(false);
+  const [currentDemoIndex, setCurrentDemoIndex] = useState(0);
+
+  const demoImages = [
+    "https://i.postimg.cc/FKS0rXCZ/demo1.png",
+    "https://i.postimg.cc/hjbxmbBh/demo2.png",
+    "https://i.postimg.cc/j2xf4wxF/demo3.png",
+    "https://i.postimg.cc/wMqNQyqr/demo4.png",
+    "https://i.postimg.cc/prsFGWyz/demo5.png",
+    "https://i.postimg.cc/Wp8gbnSc/demo6.png",
+    "https://i.postimg.cc/9XbZFp1q/demo7.png",
+    "https://i.postimg.cc/DyzsWXYb/demo8.png",
+  ];
 
   const previewRef = useRef<HTMLDivElement>(null);
 
@@ -157,6 +172,14 @@ const App: React.FC = () => {
         </div>
         
         <div className="flex items-center gap-4">
+          <button 
+            onClick={() => setIsDemoOpen(true)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm transition-all active:scale-95 ${isDarkMode ? 'bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20' : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'}`}
+          >
+            <PlayCircle size={18} />
+            演示项目
+          </button>
+
           <button 
             onClick={() => setIsDarkMode(!isDarkMode)} 
             className={`p-2.5 rounded-xl transition-all active:scale-90 flex items-center justify-center ${isDarkMode ? 'bg-slate-800 text-yellow-400 hover:bg-slate-700' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
@@ -507,6 +530,53 @@ const App: React.FC = () => {
             <h2 className={`text-4xl font-black mb-4 tracking-tighter transition-colors ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Analysis Interrupted</h2>
             <p className={`max-w-md mb-10 font-medium transition-colors ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>{error || "An unexpected error occurred. This might be due to a complex legal structure that needs manual review."}</p>
             <button onClick={reset} className={`px-12 py-5 rounded-[2rem] font-black text-xl hover:scale-105 active:scale-95 transition-all shadow-2xl ${isDarkMode ? 'bg-slate-100 text-slate-900' : 'bg-slate-900 text-white'}`}>Try Again</button>
+          </div>
+        )}
+
+        {/* Demo Modal */}
+        {isDemoOpen && (
+          <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/90 backdrop-blur-md animate-in fade-in duration-300">
+            <button 
+              onClick={() => setIsDemoOpen(false)}
+              className="absolute top-8 right-8 p-3 text-white/50 hover:text-white transition-colors z-[1001]"
+            >
+              <X size={32} />
+            </button>
+
+            <div className="relative w-full max-w-6xl aspect-video flex items-center justify-center px-20">
+              <div className="w-full h-full rounded-3xl overflow-hidden shadow-2xl border border-white/10 bg-slate-900">
+                <img 
+                  src={demoImages[currentDemoIndex]} 
+                  alt={`Demo ${currentDemoIndex + 1}`}
+                  className="w-full h-full object-contain animate-in zoom-in-95 duration-500"
+                  referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    e.currentTarget.src = `https://picsum.photos/seed/demo${currentDemoIndex + 1}/1920/1080?text=Please+Upload+Demo+${currentDemoIndex + 1}`;
+                  }}
+                />
+              </div>
+
+              {/* Navigation Arrows */}
+              <div className="absolute bottom-[-80px] left-0 right-0 flex items-center justify-center gap-12">
+                <button 
+                  onClick={() => setCurrentDemoIndex(prev => (prev > 0 ? prev - 1 : demoImages.length - 1))}
+                  className="p-4 rounded-full bg-white/10 text-white hover:bg-white/20 transition-all active:scale-90"
+                >
+                  <ChevronLeft size={32} />
+                </button>
+
+                <div className="text-white/60 font-mono text-lg tracking-widest">
+                  <span className="text-white font-bold">{currentDemoIndex + 1}</span> / {demoImages.length}
+                </div>
+
+                <button 
+                  onClick={() => setCurrentDemoIndex(prev => (prev < demoImages.length - 1 ? prev + 1 : 0))}
+                  className="p-4 rounded-full bg-white/10 text-white hover:bg-white/20 transition-all active:scale-90"
+                >
+                  <ChevronRight size={32} />
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </main>
