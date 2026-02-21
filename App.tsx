@@ -7,7 +7,7 @@ import {
   Sun, Moon
 } from 'lucide-react';
 import { AnalysisStatus, CaseAnalysis, SlideData, SlideStyle, Source, WordSection } from './types';
-import { generateWordAnalysis, generatePPTFromWord, generateComplexScenarioVisual, validateSources } from './services/geminiService';
+import { generateWordAnalysis, generatePPTFromWord, generateComplexScenarioVisual, validateSources, extractTextFromSources } from './services/geminiService';
 import { generatePPT } from './services/pptService';
 import { exportToWord } from './services/wordService';
 
@@ -16,6 +16,7 @@ const App: React.FC = () => {
   const [sources, setSources] = useState<Source[]>([]);
   const [urlInput, setUrlInput] = useState('');
   const [wordContent, setWordContent] = useState<WordSection[]>([]);
+  const [extractedText, setExtractedText] = useState('');
   const [analysis, setAnalysis] = useState<CaseAnalysis | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -69,14 +70,16 @@ const App: React.FC = () => {
     if (!file) return;
     const r = new FileReader();
     r.onload = (ev) => {
+      const result = ev.target?.result as string;
+      const base64 = result.split(',')[1];
       setSources([...sources, { 
         id: Date.now().toString(), 
         type: 'file', 
-        value: ev.target?.result as string, 
+        value: base64, 
         name: file.name 
       }]);
     };
-    r.readAsText(file);
+    r.readAsDataURL(file);
   };
 
   const removeSource = (id: string) => setSources(sources.filter(s => s.id !== id));
@@ -84,7 +87,7 @@ const App: React.FC = () => {
   const startAnalysis = async () => {
     if (sources.length === 0) return;
     try {
-      setStatus(AnalysisStatus.ANALYZING_WORD);
+      setStatus(AnalysisStatus.EXTRACTING_TEXT);
       setStatusLog([{ msg: "Authenticating input validity...", done: false }]);
       
       const isValid = await validateSources(sources);
@@ -93,8 +96,21 @@ const App: React.FC = () => {
         return;
       }
 
-      setStatusLog(prev => [...prev.map(l => ({...l, done: true})), { msg: "Privacy Expert reviewing the files...", done: false }]);
-      const res = await generateWordAnalysis(sources);
+      setStatusLog(prev => [...prev.map(l => ({...l, done: true})), { msg: "Extracting text from sources...", done: false }]);
+      const text = await extractTextFromSources(sources);
+      setExtractedText(text);
+      setStatus(AnalysisStatus.TEXT_READY);
+    } catch (err: any) {
+      setError(err.message);
+      setStatus(AnalysisStatus.ERROR);
+    }
+  };
+
+  const proceedToAnalysis = async () => {
+    try {
+      setStatus(AnalysisStatus.ANALYZING_WORD);
+      setStatusLog([{ msg: "Privacy Expert reviewing the extracted text...", done: false }]);
+      const res = await generateWordAnalysis(extractedText);
       setWordContent(res);
       setStatus(AnalysisStatus.WORD_READY);
     } catch (err: any) {
@@ -120,6 +136,7 @@ const App: React.FC = () => {
     setStatus(AnalysisStatus.IDLE);
     setAnalysis(null);
     setWordContent([]);
+    setExtractedText('');
     setSources([]);
     setStatusLog([]);
     setActiveIndex(0);
@@ -201,6 +218,9 @@ const App: React.FC = () => {
                     >
                       https://www.dataprotection.ie/sites/default/files/uploads/2023-01/Final%20Decision%20VIEC%20IN-21-2-5%20121222_Redacted.pdf
                     </div>
+                    <p className={`text-[10px] font-medium transition-colors italic ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+                      Tip: If URL extraction fails due to site restrictions, please download the PDF and use the "Import PDF" option for 100% reliability.
+                    </p>
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-3 min-h-[40px]">
@@ -272,7 +292,7 @@ const App: React.FC = () => {
           </div>
         )}
 
-        {(status === AnalysisStatus.ANALYZING_WORD || status === AnalysisStatus.GENERATING_PPT) && (
+        {(status === AnalysisStatus.ANALYZING_WORD || status === AnalysisStatus.GENERATING_PPT || status === AnalysisStatus.EXTRACTING_TEXT) && (
           <div className={`absolute inset-0 flex flex-col items-center justify-center studio-grid z-50 transition-colors duration-500 ${isDarkMode ? 'bg-slate-900' : 'bg-white'}`}>
              <div className="relative mb-12">
                <div className={`w-32 h-32 border-8 rounded-full animate-spin transition-colors ${isDarkMode ? 'border-slate-800 border-t-indigo-500' : 'border-slate-50 border-t-indigo-600'}`} />
@@ -282,7 +302,8 @@ const App: React.FC = () => {
              </div>
              <div className="max-w-md w-full text-center space-y-6">
                 <h2 className={`text-3xl font-black tracking-tight transition-colors ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-                  {status === AnalysisStatus.ANALYZING_WORD ? "GDPR Synthesis in Progress..." : "Designing Strategic Deck..."}
+                  {status === AnalysisStatus.EXTRACTING_TEXT ? "Extracting Source Text..." : 
+                   status === AnalysisStatus.ANALYZING_WORD ? "GDPR Synthesis in Progress..." : "Designing Strategic Deck..."}
                 </h2>
                 <div className={`p-6 rounded-3xl shadow-xl border text-left space-y-3 transition-colors ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
                    {statusLog.map((log, i) => (
@@ -293,6 +314,39 @@ const App: React.FC = () => {
                    ))}
                 </div>
              </div>
+          </div>
+        )}
+
+        {status === AnalysisStatus.TEXT_READY && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center p-12 studio-grid z-40 overflow-hidden">
+            <div className={`w-full max-w-4xl h-[80vh] flex flex-col rounded-[2.5rem] shadow-2xl border overflow-hidden animate-in zoom-in-95 duration-500 ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+              <div className="p-8 border-b flex items-center justify-between shrink-0">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg">
+                    <Copy size={24} />
+                  </div>
+                  <div>
+                    <h2 className={`text-2xl font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Extracted Text</h2>
+                    <p className={`text-xs font-bold uppercase tracking-widest mt-1 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Step 1: Raw Content Retrieval</p>
+                  </div>
+                </div>
+                <button onClick={reset} className="p-2 text-slate-400 hover:text-red-500 transition-colors"><X size={24} /></button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-10 custom-scrollbar">
+                <textarea 
+                  className={`w-full h-full bg-transparent border-0 focus:ring-0 resize-none font-mono text-sm leading-relaxed ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}
+                  value={extractedText}
+                  onChange={(e) => setExtractedText(e.target.value)}
+                  placeholder="Extracted text will appear here..."
+                />
+              </div>
+              <div className="p-8 border-t flex justify-end gap-4 shrink-0">
+                <button onClick={reset} className={`px-8 py-4 rounded-2xl font-bold transition-all ${isDarkMode ? 'bg-slate-700 text-white hover:bg-slate-600' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>Cancel</button>
+                <button onClick={proceedToAnalysis} className="px-10 py-4 bg-indigo-600 text-white rounded-2xl font-black shadow-xl shadow-indigo-500/20 hover:bg-indigo-700 transition-all flex items-center gap-3">
+                  Analysis <ArrowRight size={20} />
+                </button>
+              </div>
+            </div>
           </div>
         )}
 

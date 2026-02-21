@@ -46,6 +46,8 @@ export interface CaseAnalysis {
 
 export enum AnalysisStatus {
   IDLE = 'IDLE',
+  EXTRACTING_TEXT = 'EXTRACTING_TEXT',
+  TEXT_READY = 'TEXT_READY',
   ANALYZING_WORD = 'ANALYZING_WORD',
   VALIDATION_FAILED = 'VALIDATION_FAILED',
   WORD_READY = 'WORD_READY',

@@ -2,7 +2,7 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { CaseAnalysis, SlideData, SlideStyle, Source, WordSection } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 const WORD_SYSTEM_INSTRUCTION = `You are a world-class European Privacy Compliance Expert and GDPR specialist. 
 Analyze legal cases/documents with extreme precision. Produce a comprehensive Word-ready analysis in RICH MARKDOWN FORMAT.
@@ -73,16 +73,49 @@ export async function validateSources(sources: Source[]): Promise<boolean> {
     }
   });
 
-  const result = response.text.toLowerCase().trim();
+  const result = (response.text || '').toLowerCase().trim();
   return result.includes('true');
 }
 
-export async function generateWordAnalysis(sources: Source[]): Promise<WordSection[]> {
-  const combinedContent = sources.map(s => `${s.type === 'url' ? 'URL' : 'Document'}: ${s.value}`).join('\n\n');
+export async function extractTextFromSources(sources: Source[]): Promise<string> {
+  const parts: any[] = [];
+  const urls: string[] = [];
+
+  sources.forEach(s => {
+    if (s.type === 'url') {
+      urls.push(s.value);
+      parts.push({ text: `TASK: Extract verbatim text from this URL: ${s.value}. 
+      If you encounter a 403, 404, or bot-block, IMMEDIATELY use Google Search to find the content of this specific document/page. 
+      Look for official mirrors, PDF versions, or cached content.` });
+    } else {
+      parts.push({
+        inlineData: {
+          mimeType: "application/pdf",
+          data: s.value
+        }
+      });
+      parts.push({ text: `Please extract all text content from this document: ${s.name}` });
+    }
+  });
+
+  parts.push({ text: "CRITICAL: Return ONLY the raw text content. No summaries. No analysis. If you absolutely cannot find the content after trying both direct access and search, explain exactly why (e.g., 'Site blocked AI access')." });
+
+  const response = await ai.models.generateContent({
+    model: 'gemini-3.1-pro-preview',
+    contents: { parts },
+    config: {
+      tools: urls.length > 0 ? [{ urlContext: {} }, { googleSearch: {} }] : undefined,
+      temperature: 0.1,
+    }
+  });
   
+  return response.text || '';
+}
+
+export async function generateWordAnalysis(rawText: string): Promise<WordSection[]> {
   const response = await ai.models.generateContent({
     model: 'gemini-3-pro-preview',
-    contents: `Analyze these sources and create the 5-part expert Word analysis in Markdown.\n\n${combinedContent.substring(0, 40000)}`,
+    contents: `Analyze this extracted text and create the 5-part expert Word analysis in Markdown.\n\n${rawText.substring(0, 40000)}`,
     config: {
       systemInstruction: WORD_SYSTEM_INSTRUCTION,
       responseMimeType: "application/json",
@@ -100,7 +133,8 @@ export async function generateWordAnalysis(sources: Source[]): Promise<WordSecti
     }
   });
   
-  return JSON.parse(response.text || '[]');
+  const jsonStr = response.text || '[]';
+  return JSON.parse(jsonStr);
 }
 
 export async function generatePPTFromWord(wordContent: WordSection[]): Promise<CaseAnalysis> {
@@ -153,7 +187,8 @@ export async function generatePPTFromWord(wordContent: WordSection[]): Promise<C
     }
   });
 
-  const data = JSON.parse(response.text || '{}');
+  const jsonStr = response.text || '{}';
+  const data = JSON.parse(jsonStr);
   data.slides = data.slides.map((s: any, i: number) => ({
     ...s,
     id: `slide-${i}-${Date.now()}`,
