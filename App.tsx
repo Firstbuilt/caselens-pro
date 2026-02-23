@@ -216,54 +216,11 @@ const App: React.FC = () => {
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-violet-500">of Global Compliance.</span>
               </h1>
               <p className={`text-base md:text-lg font-medium max-w-xl mx-auto leading-relaxed transition-colors ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                Transform any case URL or PDF into professional legal dossiers and executive decks in seconds.
+                Transform any case PDF into professional legal dossiers and executive decks in seconds.
               </p>
             </div>
 
-            <div className="w-full max-w-5xl grid md:grid-cols-2 gap-4 md:gap-6 z-10 shrink-0">
-              <div className={`p-6 md:p-8 rounded-[2rem] shadow-2xl space-y-4 border transition-all duration-500 group ${isDarkMode ? 'bg-slate-800/40 border-slate-700 hover:border-indigo-500/50' : 'bg-white border-slate-100 hover:border-indigo-200'}`}>
-                <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-inner transition-colors ${isDarkMode ? 'bg-indigo-500/10 text-indigo-400' : 'bg-indigo-50 text-indigo-600'}`}>
-                    <Globe size={20} />
-                  </div>
-                  <h3 className={`text-xl font-extrabold tracking-tight transition-colors ${isDarkMode ? 'text-slate-100' : 'text-slate-800'}`}>Crawl URL</h3>
-                </div>
-                <div className="space-y-3">
-                  <div className="relative flex items-center gap-2">
-                    <input 
-                      className={`w-full p-4 rounded-xl outline-none focus:ring-4 transition-all pr-20 border text-sm ${isDarkMode ? 'bg-slate-900/50 border-slate-700 text-white focus:ring-indigo-500/20 focus:border-indigo-500' : 'bg-slate-50 border-slate-200 text-[#1E293B] focus:ring-indigo-500/10 focus:border-indigo-500'}`} 
-                      placeholder="Case URL..." 
-                      value={urlInput} 
-                      onChange={e => setUrlInput(e.target.value)}
-                      onKeyDown={e => e.key === 'Enter' && addUrlSource()}
-                    />
-                    <button onClick={addUrlSource} className="absolute right-1.5 top-1.5 bottom-1.5 px-4 bg-indigo-600 text-white rounded-lg font-bold text-xs hover:bg-indigo-700 transition-all shadow-md">Add</button>
-                  </div>
-                  <div className="px-1 space-y-1">
-                    <p className={`text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 transition-colors ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
-                      <Info size={10} /> Example:
-                    </p>
-                    <div 
-                      onClick={useExample}
-                      className={`text-[10px] font-mono p-2 rounded-lg border cursor-pointer transition-all truncate hover:whitespace-normal leading-normal select-all ${isDarkMode ? 'bg-slate-900/30 border-slate-800 text-slate-500 hover:border-indigo-500/50 hover:text-indigo-400' : 'bg-slate-50 border-slate-100 text-slate-400 hover:border-indigo-200 hover:text-indigo-600'}`}
-                    >
-                      https://www.dataprotection.ie/sites/default/files/uploads/2023-01/Final%20Decision%20VIEC%20IN-21-2-5%20121222_Redacted.pdf
-                    </div>
-                    <p className={`text-[10px] font-medium transition-colors italic ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
-                      Tip: If URL extraction fails due to site restrictions, please download the PDF and use the "Import PDF" option for 100% reliability.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex flex-wrap gap-2 min-h-[32px]">
-                  {sources.filter(s => s.type === 'url').map(s => (
-                    <div key={s.id} className={`border px-3 py-1.5 rounded-full flex items-center gap-2 animate-in zoom-in-95 transition-colors ${isDarkMode ? 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400' : 'bg-indigo-50 border-indigo-100 text-indigo-700'}`}>
-                      <span className="text-[10px] font-bold truncate max-w-[120px]">{s.name}</span>
-                      <button onClick={() => removeSource(s.id)} className="opacity-60 hover:opacity-100 hover:text-red-500"><X size={10} /></button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
+            <div className="w-full max-w-3xl z-10 shrink-0">
               <div className={`p-6 md:p-8 rounded-[2rem] shadow-2xl space-y-4 border transition-all duration-500 group ${isDarkMode ? 'bg-slate-800/40 border-slate-700 hover:border-violet-500/50' : 'bg-white border-slate-100 hover:border-violet-200'}`}>
                 <div className="flex items-center gap-3">
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-inner transition-colors ${isDarkMode ? 'bg-violet-500/10 text-violet-400' : 'bg-violet-50 text-violet-600'}`}>
@@ -271,11 +228,26 @@ const App: React.FC = () => {
                   </div>
                   <h3 className={`text-xl font-extrabold tracking-tight transition-colors ${isDarkMode ? 'text-slate-100' : 'text-slate-800'}`}>Import PDF</h3>
                 </div>
-                <label className={`border-2 border-dashed rounded-[1.5rem] h-24 flex flex-col items-center justify-center cursor-pointer transition-all group ${isDarkMode ? 'border-slate-700 hover:bg-slate-800/50 hover:border-violet-500/30' : 'border-slate-200 hover:bg-slate-50 hover:border-violet-200'}`}>
+                <label className={`border-2 border-dashed rounded-[1.5rem] h-32 flex flex-col items-center justify-center cursor-pointer transition-all group ${isDarkMode ? 'border-slate-700 hover:bg-slate-800/50 hover:border-violet-500/30' : 'border-slate-200 hover:bg-slate-50 hover:border-violet-200'}`}>
                   <Plus className="text-violet-600 dark:text-violet-400 mb-1 group-hover:scale-110 transition-transform" size={20} />
                   <span className={`text-xs font-bold transition-colors ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>Drop PDF evidence</span>
                   <input type="file" className="hidden" onChange={addFileSource} />
                 </label>
+                
+                <div className="px-1 space-y-1">
+                  <p className={`text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 transition-colors ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+                    <Info size={10} /> Example Case:
+                  </p>
+                  <div 
+                    className={`text-[10px] font-mono p-2 rounded-lg border transition-all break-all leading-normal select-all ${isDarkMode ? 'bg-slate-900/30 border-slate-800 text-slate-500' : 'bg-slate-50 border-slate-100 text-slate-400'}`}
+                  >
+                    https://www.dataprotection.ie/sites/default/files/uploads/2023-01/Final%20Decision%20VIEC%20IN-21-2-5%20121222_Redacted.pdf
+                  </div>
+                  <p className={`text-[10px] font-medium transition-colors italic ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+                    Tip: Access to this url and download the case, then import the pdf here.
+                  </p>
+                </div>
+
                 <div className="flex flex-wrap gap-2 min-h-[32px]">
                   {sources.filter(s => s.type === 'file').map(s => (
                     <div key={s.id} className={`border px-3 py-1.5 rounded-full flex items-center gap-2 animate-in zoom-in-95 transition-colors ${isDarkMode ? 'bg-violet-500/10 border-violet-500/20 text-violet-400' : 'bg-violet-50 border-violet-100 text-violet-700'}`}>
