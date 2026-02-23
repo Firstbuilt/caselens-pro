@@ -535,16 +535,16 @@ const App: React.FC = () => {
 
         {/* Demo Modal */}
         {isDemoOpen && (
-          <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/90 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/95 backdrop-blur-md animate-in fade-in duration-300 p-4 md:p-8">
             <button 
               onClick={() => setIsDemoOpen(false)}
-              className="absolute top-8 right-8 p-3 text-white/50 hover:text-white transition-colors z-[1001]"
+              className="absolute top-4 right-4 md:top-8 md:right-8 p-2 text-white/50 hover:text-white transition-colors z-[1002]"
             >
               <X size={32} />
             </button>
 
-            <div className="relative w-full max-w-6xl aspect-video flex items-center justify-center px-20">
-              <div className="w-full h-full rounded-3xl overflow-hidden shadow-2xl border border-white/10 bg-slate-900">
+            <div className="relative w-full h-full max-w-[95vw] max-h-[90vh] flex items-center justify-center">
+              <div className="w-full h-full rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-slate-900/50 flex items-center justify-center relative group">
                 <img 
                   src={demoImages[currentDemoIndex]} 
                   alt={`Demo ${currentDemoIndex + 1}`}
@@ -554,27 +554,26 @@ const App: React.FC = () => {
                     e.currentTarget.src = `https://picsum.photos/seed/demo${currentDemoIndex + 1}/1920/1080?text=Please+Upload+Demo+${currentDemoIndex + 1}`;
                   }}
                 />
-              </div>
 
-              {/* Navigation Arrows */}
-              <div className="absolute bottom-[-80px] left-0 right-0 flex items-center justify-center gap-12">
+                {/* Navigation Arrows - Overlay */}
                 <button 
-                  onClick={() => setCurrentDemoIndex(prev => (prev > 0 ? prev - 1 : demoImages.length - 1))}
-                  className="p-4 rounded-full bg-white/10 text-white hover:bg-white/20 transition-all active:scale-90"
+                  onClick={(e) => { e.stopPropagation(); setCurrentDemoIndex(prev => (prev > 0 ? prev - 1 : demoImages.length - 1)); }}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/40 text-white/70 hover:text-white hover:bg-black/60 transition-all active:scale-90 backdrop-blur-sm border border-white/5 opacity-0 group-hover:opacity-100 md:opacity-100"
                 >
-                  <ChevronLeft size={32} />
+                  <ChevronLeft size={40} />
                 </button>
 
-                <div className="text-white/60 font-mono text-lg tracking-widest">
+                <button 
+                  onClick={(e) => { e.stopPropagation(); setCurrentDemoIndex(prev => (prev < demoImages.length - 1 ? prev + 1 : 0)); }}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/40 text-white/70 hover:text-white hover:bg-black/60 transition-all active:scale-90 backdrop-blur-sm border border-white/5 opacity-0 group-hover:opacity-100 md:opacity-100"
+                >
+                  <ChevronRight size={40} />
+                </button>
+
+                {/* Page Indicator - Overlay */}
+                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 px-6 py-2 rounded-full bg-black/60 text-white/90 font-mono text-base tracking-widest backdrop-blur-md border border-white/10 shadow-lg">
                   <span className="text-white font-bold">{currentDemoIndex + 1}</span> / {demoImages.length}
                 </div>
-
-                <button 
-                  onClick={() => setCurrentDemoIndex(prev => (prev < demoImages.length - 1 ? prev + 1 : 0))}
-                  className="p-4 rounded-full bg-white/10 text-white hover:bg-white/20 transition-all active:scale-90"
-                >
-                  <ChevronRight size={32} />
-                </button>
               </div>
             </div>
           </div>
