@@ -220,7 +220,7 @@ const App: React.FC = () => {
               </p>
             </div>
 
-            <div className="w-full max-w-3xl z-10 shrink-0">
+            <div className="w-full max-w-4xl z-10 shrink-0">
               <div className={`p-6 md:p-8 rounded-[2rem] shadow-2xl space-y-4 border transition-all duration-500 group ${isDarkMode ? 'bg-slate-800/40 border-slate-700 hover:border-violet-500/50' : 'bg-white border-slate-100 hover:border-violet-200'}`}>
                 <div className="flex items-center gap-3">
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-inner transition-colors ${isDarkMode ? 'bg-violet-500/10 text-violet-400' : 'bg-violet-50 text-violet-600'}`}>
