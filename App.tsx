@@ -11,6 +11,95 @@ import { generateWordAnalysis, generatePPTFromWord, generateComplexScenarioVisua
 import { generatePPT } from './services/pptService';
 import { exportToWord } from './services/wordService';
 
+const translations = {
+  en: {
+    systemTitle: "European Privacy Expert System",
+    mainTitle1: "Master the Complexity",
+    mainTitle2: "of Global Compliance.",
+    subtitle: "Transform any case PDF into professional legal dossiers and executive decks in seconds.",
+    importPdf: "Import PDF",
+    dropPdf: "Drop PDF evidence",
+    exampleCase: "Example Case:",
+    tip: "Tip: Access to this url and download the case, then import the pdf here.",
+    analyzeCase: "Analyze Case",
+    extractedText: "Extracted Text",
+    step1: "Step 1: Raw Content Retrieval",
+    cancel: "Cancel",
+    analysis: "Analysis",
+    expertDossier: "Expert Dossier",
+    gdprReport: "GDPR Analysis Report",
+    exportWord: "Export Word",
+    generatePpt: "Generate PPT",
+    strategicPresentation: "Strategic Presentation",
+    visualEngine: "Visual Synthesis Engine",
+    exportPptx: "Export PPTX",
+    confidential: "Confidential Executive Dossier",
+    interrupted: "Analysis Interrupted",
+    tryAgain: "Try Again",
+    newAnalysis: "New Analysis",
+    demoProject: "Demo Project",
+    authenticating: "Authenticating input validity...",
+    extracting: "Extracting text from sources...",
+    reviewing: "Privacy Expert reviewing the extracted text...",
+    synthesizing: "Synthesizing strategic deck from analysis...",
+    extractingTitle: "Extracting Source Text...",
+    gdprSynthesis: "GDPR Synthesis in Progress...",
+    designingDeck: "Designing Strategic Deck...",
+    comeOn: "Come on!",
+    areYouSure: "Are you sure what you input is related to case decision?",
+    violation: "Legal Protocol Violation Detected",
+    retry: "My fault, retry!",
+    unexpectedError: "An unexpected error occurred. This might be due to a complex legal structure that needs manual review.",
+    crawlUrl: "Crawl URL",
+    add: "Add",
+    example: "Example:",
+    tipUrl: "Tip: If URL extraction fails due to site restrictions, please download the PDF and use the \"Import PDF\" option for 100% reliability."
+  },
+  zh: {
+    systemTitle: "欧洲隐私专家系统",
+    mainTitle1: "掌握复杂性",
+    mainTitle2: "全球合规之道",
+    subtitle: "将任何案例PDF转化为专业法律档案，聚焦重点，一览无余。",
+    importPdf: "导入PDF",
+    dropPdf: "拖入PDF证据",
+    exampleCase: "示例案例：",
+    tip: "提示：访问此链接下载案例，然后在此处导入PDF。",
+    analyzeCase: "分析案例",
+    extractedText: "提取文本",
+    step1: "第一步：原始内容检索",
+    cancel: "取消",
+    analysis: "开始分析",
+    expertDossier: "专家档案",
+    gdprReport: "GDPR分析报告",
+    exportWord: "导出Word",
+    generatePpt: "生成PPT",
+    strategicPresentation: "战略演示",
+    visualEngine: "视觉合成引擎",
+    exportPptx: "导出PPTX",
+    confidential: "机密高管档案",
+    interrupted: "分析中断",
+    tryAgain: "重试",
+    newAnalysis: "新分析",
+    demoProject: "演示项目",
+    authenticating: "正在验证输入有效性...",
+    extracting: "正在从源提取文本...",
+    reviewing: "隐私专家正在审查提取的文本...",
+    synthesizing: "正在从分析中合成战略演示文稿...",
+    extractingTitle: "正在提取源文本...",
+    gdprSynthesis: "GDPR合成进行中...",
+    designingDeck: "正在设计战略演示文稿...",
+    comeOn: "拜托！",
+    areYouSure: "你确定输入的内容与案例决策相关吗？",
+    violation: "检测到法律协议违规",
+    retry: "我的错，重试！",
+    unexpectedError: "发生意外错误。这可能是由于复杂的法律结构需要人工审查。",
+    crawlUrl: "抓取 URL",
+    add: "添加",
+    example: "示例：",
+    tipUrl: "提示：如果由于网站限制导致 URL 提取失败，请下载 PDF 并使用“导入 PDF”选项以确保 100% 可靠性。"
+  }
+};
+
 const App: React.FC = () => {
   const [status, setStatus] = useState<AnalysisStatus>(AnalysisStatus.IDLE);
   const [sources, setSources] = useState<Source[]>([]);
@@ -29,6 +118,8 @@ const App: React.FC = () => {
     // To ensure a fresh start for this UX request, we default to true.
     return true; 
   });
+  const [language, setLanguage] = useState<'en' | 'zh'>('en');
+  const t = translations[language];
 
   // Demo State
   const [isDemoOpen, setIsDemoOpen] = useState(false);
@@ -105,7 +196,7 @@ const App: React.FC = () => {
     if (sources.length === 0) return;
     try {
       setStatus(AnalysisStatus.EXTRACTING_TEXT);
-      setStatusLog([{ msg: "Authenticating input validity...", done: false }]);
+      setStatusLog([{ msg: "authenticating", done: false }]);
       
       const isValid = await validateSources(sources);
       if (!isValid) {
@@ -113,7 +204,7 @@ const App: React.FC = () => {
         return;
       }
 
-      setStatusLog(prev => [...prev.map(l => ({...l, done: true})), { msg: "Extracting text from sources...", done: false }]);
+      setStatusLog(prev => [...prev.map(l => ({...l, done: true})), { msg: "extracting", done: false }]);
       const text = await extractTextFromSources(sources);
       setExtractedText(text);
       setStatus(AnalysisStatus.TEXT_READY);
@@ -126,7 +217,7 @@ const App: React.FC = () => {
   const proceedToAnalysis = async () => {
     try {
       setStatus(AnalysisStatus.ANALYZING_WORD);
-      setStatusLog([{ msg: "Privacy Expert reviewing the extracted text...", done: false }]);
+      setStatusLog([{ msg: "reviewing", done: false }]);
       const res = await generateWordAnalysis(extractedText);
       setWordContent(res);
       setStatus(AnalysisStatus.WORD_READY);
@@ -139,7 +230,7 @@ const App: React.FC = () => {
   const generatePPTAction = async () => {
     try {
       setStatus(AnalysisStatus.GENERATING_PPT);
-      setStatusLog([{ msg: "Synthesizing strategic deck from analysis...", done: false }]);
+      setStatusLog([{ msg: "synthesizing", done: false }]);
       const res = await generatePPTFromWord(wordContent);
       setAnalysis(res);
       setStatus(AnalysisStatus.READY);
@@ -185,7 +276,14 @@ const App: React.FC = () => {
             className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm transition-all active:scale-95 ${isDarkMode ? 'bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20' : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'}`}
           >
             <PlayCircle size={18} />
-            演示项目
+            {t.demoProject}
+          </button>
+
+          <button 
+            onClick={() => setLanguage(l => l === 'en' ? 'zh' : 'en')} 
+            className={`px-3 py-2 rounded-xl font-bold text-sm transition-all active:scale-95 border ${isDarkMode ? 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+          >
+            {language === 'en' ? '中' : 'EN'}
           </button>
 
           <button 
@@ -198,7 +296,7 @@ const App: React.FC = () => {
 
           {(status === AnalysisStatus.READY || status === AnalysisStatus.WORD_READY) && (
             <button onClick={reset} className="p-2 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors flex items-center gap-2 text-xs font-bold uppercase tracking-wider">
-              <RotateCcw size={16}/> New Analysis
+              <RotateCcw size={16}/> {t.newAnalysis}
             </button>
           )}
         </div>
@@ -209,14 +307,14 @@ const App: React.FC = () => {
           <div className="absolute inset-0 flex flex-col items-center justify-center p-4 md:p-8 studio-grid overflow-hidden">
             <div className="text-center space-y-4 max-w-3xl z-10 mb-8 animate-in fade-in duration-1000 shrink-0">
               <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border text-[10px] font-bold uppercase tracking-wider mb-2 transition-colors ${isDarkMode ? 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400' : 'bg-indigo-50 border-indigo-100 text-indigo-700'}`}>
-                <Zap size={12} /> European Privacy Expert System
+                <Zap size={12} /> {t.systemTitle}
               </div>
               <h1 className={`text-4xl md:text-5xl lg:text-6xl font-[900] tracking-tight leading-[1.1] transition-colors ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-                Master the Complexity <br/>
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-violet-500">of Global Compliance.</span>
+                {t.mainTitle1} <br/>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-violet-500">{t.mainTitle2}</span>
               </h1>
               <p className={`text-base md:text-lg font-medium max-w-xl mx-auto leading-relaxed transition-colors ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                Transform any case PDF into professional legal dossiers and executive decks in seconds.
+                {t.subtitle}
               </p>
             </div>
 
@@ -226,17 +324,17 @@ const App: React.FC = () => {
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-inner transition-colors ${isDarkMode ? 'bg-violet-500/10 text-violet-400' : 'bg-violet-50 text-violet-600'}`}>
                     <FileCode size={20} />
                   </div>
-                  <h3 className={`text-xl font-extrabold tracking-tight transition-colors ${isDarkMode ? 'text-slate-100' : 'text-slate-800'}`}>Import PDF</h3>
+                  <h3 className={`text-xl font-extrabold tracking-tight transition-colors ${isDarkMode ? 'text-slate-100' : 'text-slate-800'}`}>{t.importPdf}</h3>
                 </div>
                 <label className={`border-2 border-dashed rounded-[1.5rem] h-32 flex flex-col items-center justify-center cursor-pointer transition-all group ${isDarkMode ? 'border-slate-700 hover:bg-slate-800/50 hover:border-violet-500/30' : 'border-slate-200 hover:bg-slate-50 hover:border-violet-200'}`}>
                   <Plus className="text-violet-600 dark:text-violet-400 mb-1 group-hover:scale-110 transition-transform" size={20} />
-                  <span className={`text-xs font-bold transition-colors ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>Drop PDF evidence</span>
+                  <span className={`text-xs font-bold transition-colors ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>{t.dropPdf}</span>
                   <input type="file" className="hidden" onChange={addFileSource} />
                 </label>
                 
                 <div className="px-1 space-y-1">
                   <p className={`text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 transition-colors ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
-                    <Info size={10} /> Example Case:
+                    <Info size={10} /> {t.exampleCase}
                   </p>
                   <div 
                     className={`text-[10px] font-mono p-2 rounded-lg border transition-all break-all leading-normal select-all ${isDarkMode ? 'bg-slate-900/30 border-slate-800 text-slate-500' : 'bg-slate-50 border-slate-100 text-slate-400'}`}
@@ -244,7 +342,7 @@ const App: React.FC = () => {
                     https://www.dataprotection.ie/sites/default/files/uploads/2023-01/Final%20Decision%20VIEC%20IN-21-2-5%20121222_Redacted.pdf
                   </div>
                   <p className={`text-[10px] font-medium transition-colors italic ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
-                    Tip: Access to this url and download the case, then import the pdf here.
+                    {t.tip}
                   </p>
                 </div>
 
@@ -264,7 +362,7 @@ const App: React.FC = () => {
               disabled={sources.length === 0}
               className={`mt-8 w-full max-w-xs py-4 rounded-[1.5rem] font-black text-lg shadow-2xl flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed group shrink-0 ${isDarkMode ? 'bg-indigo-600 text-white hover:bg-indigo-500' : 'bg-[#0F172A] text-white'}`}
             >
-              Analyze Case <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+              {t.analyzeCase} <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
             </button>
           </div>
         )}
@@ -278,18 +376,18 @@ const App: React.FC = () => {
               
               <div className="space-y-8">
                 <h2 className="text-5xl md:text-7xl font-black text-white leading-[1.1] tracking-tighter drop-shadow-2xl">
-                  Come on! <br/>
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-violet-400">Are you sure</span> what you input is related to case decision?
+                  {t.comeOn} <br/>
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-violet-400">{t.areYouSure}</span>
                 </h2>
                 
-                <p className="text-slate-400 font-bold text-lg uppercase tracking-widest opacity-60">Legal Protocol Violation Detected</p>
+                <p className="text-slate-400 font-bold text-lg uppercase tracking-widest opacity-60">{t.violation}</p>
               </div>
 
               <button 
                 onClick={reset}
                 className="mt-16 px-16 py-6 bg-white text-black rounded-full font-black text-2xl hover:scale-110 active:scale-95 transition-all shadow-[0_0_80px_rgba(255,255,255,0.2)] hover:bg-indigo-50 border-4 border-white"
               >
-                My fault, retry!
+                {t.retry}
               </button>
             </div>
           </div>
@@ -305,14 +403,14 @@ const App: React.FC = () => {
              </div>
              <div className="max-w-md w-full text-center space-y-6">
                 <h2 className={`text-3xl font-black tracking-tight transition-colors ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-                  {status === AnalysisStatus.EXTRACTING_TEXT ? "Extracting Source Text..." : 
-                   status === AnalysisStatus.ANALYZING_WORD ? "GDPR Synthesis in Progress..." : "Designing Strategic Deck..."}
+                  {status === AnalysisStatus.EXTRACTING_TEXT ? t.extractingTitle : 
+                   status === AnalysisStatus.ANALYZING_WORD ? t.gdprSynthesis : t.designingDeck}
                 </h2>
                 <div className={`p-6 rounded-3xl shadow-xl border text-left space-y-3 transition-colors ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
                    {statusLog.map((log, i) => (
                      <div key={i} className={`flex items-center gap-4 py-1 transition-all ${log.done ? 'opacity-30' : 'opacity-100'}`}>
                         {log.done ? <CheckCircle2 className="text-emerald-500" size={18} /> : <Loader2 className="animate-spin text-indigo-600 dark:text-indigo-400" size={18} />}
-                        <span className={`text-sm font-bold ${isDarkMode ? 'text-slate-300' : 'text-slate-800'}`}>{log.msg}</span>
+                        <span className={`text-sm font-bold ${isDarkMode ? 'text-slate-300' : 'text-slate-800'}`}>{translations[language][log.msg as keyof typeof t] || log.msg}</span>
                      </div>
                    ))}
                 </div>
@@ -329,8 +427,8 @@ const App: React.FC = () => {
                     <Copy size={24} />
                   </div>
                   <div>
-                    <h2 className={`text-2xl font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Extracted Text</h2>
-                    <p className={`text-xs font-bold uppercase tracking-widest mt-1 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Step 1: Raw Content Retrieval</p>
+                    <h2 className={`text-2xl font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{t.extractedText}</h2>
+                    <p className={`text-xs font-bold uppercase tracking-widest mt-1 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>{t.step1}</p>
                   </div>
                 </div>
                 <button onClick={reset} className="p-2 text-slate-400 hover:text-red-500 transition-colors"><X size={24} /></button>
@@ -344,9 +442,9 @@ const App: React.FC = () => {
                 />
               </div>
               <div className="p-8 border-t flex justify-end gap-4 shrink-0">
-                <button onClick={reset} className={`px-8 py-4 rounded-2xl font-bold transition-all ${isDarkMode ? 'bg-slate-700 text-white hover:bg-slate-600' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>Cancel</button>
+                <button onClick={reset} className={`px-8 py-4 rounded-2xl font-bold transition-all ${isDarkMode ? 'bg-slate-700 text-white hover:bg-slate-600' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>{t.cancel}</button>
                 <button onClick={proceedToAnalysis} className="px-10 py-4 bg-indigo-600 text-white rounded-2xl font-black shadow-xl shadow-indigo-500/20 hover:bg-indigo-700 transition-all flex items-center gap-3">
-                  Analysis <ArrowRight size={20} />
+                  {t.analysis} <ArrowRight size={20} />
                 </button>
               </div>
             </div>
@@ -363,15 +461,15 @@ const App: React.FC = () => {
                     <FileText size={20} />
                   </div>
                   <div>
-                    <h2 className={`font-black text-lg leading-none transition-colors ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Expert Dossier</h2>
-                    <p className={`text-[10px] font-bold uppercase tracking-widest mt-1 transition-colors ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>GDPR Analysis Report</p>
+                    <h2 className={`font-black text-lg leading-none transition-colors ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{t.expertDossier}</h2>
+                    <p className={`text-[10px] font-bold uppercase tracking-widest mt-1 transition-colors ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>{t.gdprReport}</p>
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => exportToWord(wordContent)} className={`px-5 py-2.5 rounded-xl text-xs font-black transition-all shadow-lg active:scale-95 ${isDarkMode ? 'bg-slate-100 text-slate-900 hover:bg-white' : 'bg-slate-900 text-white hover:bg-slate-800'}`}>Export Word</button>
+                  <button onClick={() => exportToWord(wordContent)} className={`px-5 py-2.5 rounded-xl text-xs font-black transition-all shadow-lg active:scale-95 ${isDarkMode ? 'bg-slate-100 text-slate-900 hover:bg-white' : 'bg-slate-900 text-white hover:bg-slate-800'}`}>{t.exportWord}</button>
                   {status === AnalysisStatus.WORD_READY && (
                     <button onClick={generatePPTAction} className="px-6 py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-black shadow-lg shadow-indigo-200 dark:shadow-indigo-900/20 flex items-center gap-2 hover:bg-indigo-700 transition-all active:scale-95">
-                       <Presentation size={16} /> Generate PPT
+                       <Presentation size={16} /> {t.generatePpt}
                     </button>
                   )}
                 </div>
@@ -422,8 +520,8 @@ const App: React.FC = () => {
                         <Presentation size={20} />
                       </div>
                       <div>
-                        <span className="font-bold text-sm block">Strategic Presentation</span>
-                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Visual Synthesis Engine</span>
+                        <span className="font-bold text-sm block">{t.strategicPresentation}</span>
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{t.visualEngine}</span>
                       </div>
                    </div>
                    <button 
@@ -431,7 +529,7 @@ const App: React.FC = () => {
                      disabled={isDownloading}
                      className="px-6 py-2.5 bg-white text-slate-900 rounded-xl text-xs font-black hover:bg-indigo-50 flex items-center gap-2 shadow-2xl disabled:opacity-50 transition-all active:scale-95"
                    >
-                     {isDownloading ? <Loader2 className="animate-spin" size={16}/> : <Download size={16}/>} Export PPTX
+                     {isDownloading ? <Loader2 className="animate-spin" size={16}/> : <Download size={16}/>} {t.exportPptx}
                    </button>
                 </div>
 
@@ -455,7 +553,7 @@ const App: React.FC = () => {
                                    <p className="text-4xl font-bold text-indigo-600/60 tracking-tight leading-snug">{analysis.subtitle}</p>
                                    <div className="mt-20 flex items-center gap-4">
                                       <div className="h-px w-20 bg-slate-200" />
-                                      <div className="text-xs font-black text-slate-400 uppercase tracking-[0.4em]">Confidential Executive Dossier</div>
+                                      <div className="text-xs font-black text-slate-400 uppercase tracking-[0.4em]">{t.confidential}</div>
                                    </div>
                                 </div>
                               ) : (
@@ -507,9 +605,9 @@ const App: React.FC = () => {
             <div className={`w-24 h-24 rounded-full flex items-center justify-center mb-8 shadow-2xl ${isDarkMode ? 'bg-red-500/10 text-red-400 shadow-red-900/20' : 'bg-red-50 text-red-500 shadow-red-100'}`}>
                <AlertCircle size={48} />
             </div>
-            <h2 className={`text-4xl font-black mb-4 tracking-tighter transition-colors ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Analysis Interrupted</h2>
-            <p className={`max-w-md mb-10 font-medium transition-colors ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>{error || "An unexpected error occurred. This might be due to a complex legal structure that needs manual review."}</p>
-            <button onClick={reset} className={`px-12 py-5 rounded-[2rem] font-black text-xl hover:scale-105 active:scale-95 transition-all shadow-2xl ${isDarkMode ? 'bg-slate-100 text-slate-900' : 'bg-slate-900 text-white'}`}>Try Again</button>
+            <h2 className={`text-4xl font-black mb-4 tracking-tighter transition-colors ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{t.interrupted}</h2>
+            <p className={`max-w-md mb-10 font-medium transition-colors ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>{error || t.unexpectedError}</p>
+            <button onClick={reset} className={`px-12 py-5 rounded-[2rem] font-black text-xl hover:scale-105 active:scale-95 transition-all shadow-2xl ${isDarkMode ? 'bg-slate-100 text-slate-900' : 'bg-slate-900 text-white'}`}>{t.tryAgain}</button>
           </div>
         )}
 
