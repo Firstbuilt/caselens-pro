@@ -163,11 +163,17 @@ const App: React.FC = () => {
     <div className={`h-screen w-screen flex flex-col transition-colors duration-500 font-sans selection:bg-indigo-100 dark:selection:bg-indigo-900/40 ${isDarkMode ? 'bg-[#0F172A] text-slate-100' : 'bg-[#F8FAFC] text-[#1E293B]'} overflow-hidden`}>
       <nav className={`h-16 shrink-0 px-8 flex items-center justify-between z-[100] border-b transition-colors duration-500 ${isDarkMode ? 'bg-[#0F172A]/80 border-slate-800' : 'glass border-slate-200'} backdrop-blur-xl`}>
         <div className="flex items-center gap-3 cursor-pointer group" onClick={reset}>
-          <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
-            <Layers className="text-white" size={22} />
+          <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform overflow-hidden">
+            {/* Custom Logo: Represents a document (case) being analyzed (lens/search) with tool precision (geometric shapes) */}
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-white">
+              <path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M14 2V8H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <circle cx="11" cy="14" r="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M13.5 16.5L15.5 18.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
           </div>
           <span className={`font-extrabold text-xl tracking-tight transition-colors ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
-            CaseLens <span className="text-indigo-600 dark:text-indigo-400">Pro</span>
+            CaseLens
           </span>
         </div>
         
