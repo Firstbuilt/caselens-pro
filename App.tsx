@@ -25,7 +25,8 @@ const App: React.FC = () => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const saved = localStorage.getItem('theme');
-    return saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    // Default to dark mode if no preference is saved
+    return saved ? saved === 'dark' : true;
   });
 
   // Demo State
@@ -160,7 +161,7 @@ const App: React.FC = () => {
   const currentSlide = analysis?.slides[activeIndex];
 
   return (
-    <div className={`h-screen w-screen flex flex-col transition-colors duration-500 font-sans selection:bg-indigo-100 dark:selection:bg-indigo-900/40 ${isDarkMode ? 'bg-[#0F172A] text-slate-100' : 'bg-[#F8FAFC] text-[#1E293B]'} overflow-hidden`}>
+    <div className={`h-[100dvh] w-full flex flex-col transition-colors duration-500 font-sans selection:bg-indigo-100 dark:selection:bg-indigo-900/40 ${isDarkMode ? 'bg-[#0F172A] text-slate-100' : 'bg-[#F8FAFC] text-[#1E293B]'} overflow-hidden`}>
       <nav className={`h-16 shrink-0 px-8 flex items-center justify-between z-[100] border-b transition-colors duration-500 ${isDarkMode ? 'bg-[#0F172A]/80 border-slate-800' : 'glass border-slate-200'} backdrop-blur-xl`}>
         <div className="flex items-center gap-3 cursor-pointer group" onClick={reset}>
           <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform overflow-hidden">
