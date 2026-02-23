@@ -173,7 +173,7 @@ const App: React.FC = () => {
             </svg>
           </div>
           <span className={`font-extrabold text-xl tracking-tight transition-colors ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
-            CaseLens
+            Case<span className="text-indigo-600 dark:text-indigo-400">Lens</span>
           </span>
         </div>
         
